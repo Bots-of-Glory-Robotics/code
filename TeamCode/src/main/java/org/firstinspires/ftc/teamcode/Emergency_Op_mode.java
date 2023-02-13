@@ -1,9 +1,10 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
@@ -33,6 +34,7 @@ import com.qualcomm.robotcore.util.Range;
         private DcMotor rightFrontDrive = null;
         private DcMotor liftMoter = null;
         private DcMotor intakeMoter = null;
+        private  RevBlinkinLedDriver blinkinLedDriver;
         @Override
         public void runOpMode() {
             telemetry.addData("Status", "Initialized");
@@ -47,13 +49,16 @@ import com.qualcomm.robotcore.util.Range;
             rightFrontDrive = hardwareMap.get(DcMotor.class, "FRDrive");
             liftMoter = hardwareMap.get(DcMotor.class, "Lift");
             intakeMoter = hardwareMap.get(DcMotor.class, "claw");
+            blinkinLedDriver = hardwareMap.get(RevBlinkinLedDriver.class, "led");
             // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
             // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
             // Note: The settings here assume direct drive on left and right wheels.  Gear Reduction or 90 Deg drives may require direction flips
-            leftBackDrive.setDirection(DcMotor.Direction.REVERSE);
-            rightBackDrive.setDirection(DcMotor.Direction.FORWARD);
-            leftFrontDrive.setDirection(DcMotor.Direction.REVERSE);
-            rightFrontDrive.setDirection(DcMotor.Direction.FORWARD);
+            leftBackDrive.setDirection(DcMotor.Direction.FORWARD);
+            rightBackDrive.setDirection(DcMotor.Direction.REVERSE);
+            leftFrontDrive.setDirection(DcMotor.Direction.FORWARD);
+            rightFrontDrive.setDirection(DcMotor.Direction.REVERSE);
+
+            //rightBackDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             // Wait for the game to start (driver presses PLAY)
             waitForStart();
             runtime.reset();
@@ -61,15 +66,15 @@ import com.qualcomm.robotcore.util.Range;
             // run until the end of the match (driver presses STOP)
             while (opModeIsActive()) {
                 if(gamepad2.y){
-                    intakeMoter.setPower(0.5);
+                    intakeMoter.setPower(1);
                 }else if (gamepad2.a){
-                    intakeMoter.setPower(-0.5);
+                    intakeMoter.setPower(- 1 );
                 }else{
                     intakeMoter.setPower(0);
                 }
 
                 if(gamepad2.right_trigger > 0.1){
-                    liftMoter.setPower(0.1);
+                    liftMoter.setPower(0.9);
 
                 }else if (gamepad2.left_trigger > 0.1){
                     liftMoter.setPower(-0.75);
@@ -85,25 +90,41 @@ import com.qualcomm.robotcore.util.Range;
 
                 // POV Mode uses left stick to go forward, and right stick to turn.
                 // - This uses basic math to combine motions and is easier to drive straight.
-                double drive = -gamepad1.left_stick_y;
-                double turn  =  gamepad1.right_stick_x;
-                leftPower    = Range.clip(drive + turn, -1.0, 1.0) ;
-                rightPower   = Range.clip(drive - turn, -1.0, 1.0) ;
+                double r = Math.hypot(-gamepad1.left_stick_x,gamepad1.left_stick_y);
+                double robotAngle = Math.atan2(gamepad1.left_stick_y, -gamepad1.left_stick_x) - Math.PI / 4;
+                double rightX = -gamepad1.right_stick_x;
+                final double v1 = r * Math.cos(robotAngle) + rightX;
+                final double v2 = r * Math.sin(robotAngle) - rightX;
+                final double v3 = r * Math.sin(robotAngle) + rightX;
+                final double v4 = r * Math.cos(robotAngle) - rightX;
 
+                leftFrontDrive.setPower(v1);
+                rightFrontDrive.setPower(v2);
+                leftBackDrive.setPower(v3);
+                rightBackDrive.setPower(v4);
+                if(runtime.seconds() > 90 )
+                {
+                    blinkinLedDriver.setPattern(RevBlinkinLedDriver.BlinkinPattern.RED);
+
+                }else if(runtime.seconds() > 85 ) {
+                    blinkinLedDriver.setPattern(RevBlinkinLedDriver.BlinkinPattern.RED_ORANGE);
+
+                }else if(runtime.seconds() > 80 ) {
+                    blinkinLedDriver.setPattern(RevBlinkinLedDriver.BlinkinPattern.ORANGE);
+
+                }
                 // Tank Mode uses one stick to control each wheel.
                 // - This requires no math, but it is hard to drive forward slowly and keep straight.
                 // leftPower  = -gamepad1.left_stick_y ;
                 // rightPower = -gamepad1.right_stick_y ;
 
                 // Send calculated power to wheels
-                leftBackDrive.setPower(leftPower);
-                leftFrontDrive.setPower(leftPower);
-                rightFrontDrive.setPower(rightPower);
-                rightBackDrive.setPower(rightPower);
                 // Show the elapsed game time and wheel power.
                 telemetry.addData("Status", "Run Time: " + runtime.toString());
-                telemetry.addData("Motors", "left (%.2f), right (%.2f)", leftPower, rightPower);
                 telemetry.addData("BackLeftPower", leftBackDrive.getPower());
+                telemetry.addData("Right Encoder", rightBackDrive.getCurrentPosition());
+                telemetry.addData("Left Encoder", leftBackDrive.getCurrentPosition());
+                telemetry.addData("lift Encoder", liftMoter.getCurrentPosition());
                 telemetry.update();
             }
         }
