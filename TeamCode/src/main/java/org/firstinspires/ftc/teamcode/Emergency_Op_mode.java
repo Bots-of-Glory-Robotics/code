@@ -35,6 +35,8 @@ import com.qualcomm.robotcore.util.Range;
         private DcMotor liftMoter = null;
         private DcMotor intakeMoter = null;
         private  RevBlinkinLedDriver blinkinLedDriver;
+
+        private  int liftTarget=0;
         @Override
         public void runOpMode() {
             telemetry.addData("Status", "Initialized");
@@ -58,13 +60,22 @@ import com.qualcomm.robotcore.util.Range;
             leftFrontDrive.setDirection(DcMotor.Direction.FORWARD);
             rightFrontDrive.setDirection(DcMotor.Direction.REVERSE);
 
+            rightFrontDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
             //rightBackDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             // Wait for the game to start (driver presses PLAY)
+            liftMoter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
             waitForStart();
             runtime.reset();
 
+            liftMoter.setTargetPosition(0);
+            liftMoter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            liftMoter.setPower(1);
+
             // run until the end of the match (driver presses STOP)
             while (opModeIsActive()) {
+                liftMoter.setTargetPosition(liftTarget);
                 if(gamepad2.y){
                     intakeMoter.setPower(1);
                 }else if (gamepad2.a){
@@ -74,12 +85,10 @@ import com.qualcomm.robotcore.util.Range;
                 }
 
                 if(gamepad2.right_trigger > 0.1){
-                    liftMoter.setPower(0.9);
+                    liftTarget -= 15;
 
                 }else if (gamepad2.left_trigger > 0.1){
-                    liftMoter.setPower(-0.75);
-                }else{
-                    liftMoter.setPower(0);
+                    liftTarget += 15;
                 }
                 // Setup a variable for each drive wheel to save power level for telemetry
                 double leftPower;
@@ -125,6 +134,8 @@ import com.qualcomm.robotcore.util.Range;
                 telemetry.addData("Right Encoder", rightBackDrive.getCurrentPosition());
                 telemetry.addData("Left Encoder", leftBackDrive.getCurrentPosition());
                 telemetry.addData("lift Encoder", liftMoter.getCurrentPosition());
+                telemetry.addData("lift Encoder Tar", liftMoter.getTargetPosition());
+                telemetry.addData("right Front", rightFrontDrive.getTargetPosition());
                 telemetry.update();
             }
         }

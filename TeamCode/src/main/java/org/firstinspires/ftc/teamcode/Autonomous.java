@@ -75,21 +75,58 @@ public class Autonomous extends LinearOpMode {
         rightFrontDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         liftMoter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        liftMoter.setTargetPosition(0);
-        liftMoter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        liftMoter.setPower(0.7);
 
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
         runtime.reset();
-        intakeMoter.setPower(-0.5);
-        encoderDrive(1,30, 30, 10);
-        liftMoter.setTargetPosition(-1500);
-        sleep(4000);
+
         liftMoter.setTargetPosition(0);
-        liftMoter.setPower(0.1);
+        liftMoter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        liftMoter.setPower(0);
+
+        intakeMoter.setPower(-0.7);
+        encoderDrive(1,1, 0, 10);
+        sleep(1000);
+        //Move from wall
+
+
+        encoderDrive(1,42, 42, 10);
+        //Lift Up
+        liftMoter.setTargetPosition(-1650);
+        liftMoter.setPower(0.7);
+        //Turn and Potition to poll
+        sleep(1000);
+        encoderDrive(1,19.25, -19.25, 10);
+        sleep(500);
+        encoderDrive(1,5, 5, 10);
+        sleep(500);
+        liftMoter.setTargetPosition(liftMoter.getTargetPosition()+700);
+        sleep(250);
+        intakeMoter.setPower(0.7);
+        sleep(250);
+        liftMoter.setTargetPosition(liftMoter.getTargetPosition()-700);
+        sleep(500);
+        //back away from poll
+        encoderDrive(1,-5, -5, 10);
+        //lift down, intake off
+        liftMoter.setTargetPosition(0);
+        intakeMoter.setPower(0);
+        //turn and Position for stack
+        encoderDrive(1,19.25, -19.25, 10);
+        liftMoter.setPower(0);
+        sleep(500);
+        encoderDrive(1,-15, -15, 10);
+        sleep(500);
+        encoderDrive(1,-20, 20, 10);
+        sleep(500);
+        //Get Ready To Grab Stack
+        encoderDrive(1,23, 24, 10);
+        liftMoter.setTargetPosition(-1500);
+        liftMoter.setPower(0.7);
+        sleep(1000);
+        encoderDrive(1,2, 2, 10);
+
         sleep(4000);
-        encoderDrive(1,10, -10, 10);
 
     }
 

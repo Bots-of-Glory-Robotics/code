@@ -21,6 +21,7 @@
 
 package org.firstinspires.ftc.teamcode.OpenCV;
 
+import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -47,6 +48,11 @@ public class AprilTagAutonomousInitDetectionExample extends LinearOpMode
     private DcMotor         rightBackDrive  = null;
     private DcMotor         leftFrontDrive  = null;
     private DcMotor         rightFrontDrive = null;
+
+    private  DcMotor liftMoter = null;
+    private  DcMotor intakeMoter = null;
+
+    private RevBlinkinLedDriver blinkinLedDriver;
 
     static final double     COUNTS_PER_MOTOR_REV    = 1440 ;    // eg: TETRIX Motor Encoder
     static final double     DRIVE_GEAR_REDUCTION    = 1.0 ;     // No External Gearing.
@@ -77,10 +83,13 @@ public class AprilTagAutonomousInitDetectionExample extends LinearOpMode
     @Override
     public void runOpMode()
     {
+        blinkinLedDriver = hardwareMap.get(RevBlinkinLedDriver.class, "led");
         leftBackDrive  = hardwareMap.get(DcMotor.class, "BLDrive");
         rightBackDrive = hardwareMap.get(DcMotor.class, "BRDrive");
         leftFrontDrive = hardwareMap.get(DcMotor.class, "FLDrive");
         rightFrontDrive = hardwareMap.get(DcMotor.class, "FRDrive");
+        liftMoter = hardwareMap.get(DcMotor.class, "Lift");
+        intakeMoter = hardwareMap.get(DcMotor.class, "claw");
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // When run, this OpMode should start both motors driving forward. So adjust these two lines based on your first test drive.
         // Note: The settings here assume direct drive on left and right wheels.  Gear Reduction or 90 Deg drives may require direction flips
@@ -94,10 +103,13 @@ public class AprilTagAutonomousInitDetectionExample extends LinearOpMode
         leftBackDrive.setDirection(DcMotor.Direction.REVERSE);
         rightBackDrive.setDirection(DcMotor.Direction.FORWARD);
 
+        liftMoter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
         leftFrontDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightFrontDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         leftBackDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightFrontDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        liftMoter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
         aprilTagDetectionPipeline = new AprilTagDetectionPipeline(tagsize, fx, fy, cx, cy);
@@ -108,7 +120,7 @@ public class AprilTagAutonomousInitDetectionExample extends LinearOpMode
             @Override
             public void onOpened()
             {
-                camera.startStreaming(800,448, OpenCvCameraRotation.UPRIGHT);
+                camera.startStreaming(1280,720, OpenCvCameraRotation.UPRIGHT);
             }
 
             @Override
@@ -225,24 +237,81 @@ public class AprilTagAutonomousInitDetectionExample extends LinearOpMode
             /*
              * Insert your autonomous code here, probably using the tag pose to decide your configuration.
              */
-            encoderDrive(.5,10,10,10, 10, 5);
+            //encoderDrive(.5,10,10,10, 10, 5);
+            liftMoter.setTargetPosition(0);
+            liftMoter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            liftMoter.setPower(0);
+
+            intakeMoter.setPower(-0.7);
+            //encoderDrive(1,1, 0, 10);
+            sleep(1000);
+            //Move from wall
+
+
+            encoderDrive(1,5, 5, 10);
+            //Lift Up
+            liftMoter.setTargetPosition(-1650);
+            liftMoter.setPower(0.7);
+            encoderDrive(1,10, 10, 10);
+            //Turn and Potition to poll
+            sleep(2000);
+            encoderDrive(1,-17.25, 17.25, 10);
+            sleep(2000);
+            encoderDrive(1,4, 4, 10);
+            sleep(2000);
+            liftMoter.setTargetPosition(liftMoter.getTargetPosition()+700);
+            sleep(250);
+            intakeMoter.setPower(0.7);
+            sleep(250);
+            liftMoter.setTargetPosition(liftMoter.getTargetPosition()-700);
+            sleep(1000);
+            //back away from poll
+            encoderDrive(1,-5, -5, 10);
+            intakeMoter.setPower(0);
+            sleep(1000);
+            encoderDrive(1,17.25, -17.25, 10);
+            sleep(1000);
+            encoderDrive(1,6, 6, 10);
+            sleep(1000);
+            encoderDrive(1,-15.25, 15.25, 10);
+            sleep(1000);
+
 
             // e.g.
             if(tagOfInterest.id == 6)
             {
+
+                encoderDrive(1,18, 18, 10);
+                blinkinLedDriver.setPattern(RevBlinkinLedDriver.BlinkinPattern.RED);
+                liftMoter.setTargetPosition(0);
+                sleep(1000);
+                liftMoter.setPower(0);
                 // do something
                 //park 1
             }
             else if(tagOfInterest.id == 7)
             {
+                blinkinLedDriver.setPattern(RevBlinkinLedDriver.BlinkinPattern.YELLOW);
+                liftMoter.setTargetPosition(0);
+                sleep(1000);
+                liftMoter.setPower(0);
                 // do something else
                 // park 2
             }
             else if(tagOfInterest.id == 8)
             {
+                encoderDrive(1,-20, -20, 10);
+                blinkinLedDriver.setPattern(RevBlinkinLedDriver.BlinkinPattern.GREEN);
+                liftMoter.setTargetPosition(0);
+                sleep(1000);
+                liftMoter.setPower(0);
                 // do something else
                 //park 2
             }
+            rightBackDrive.setPower(0);
+            leftBackDrive.setPower(0);
+            leftFrontDrive.setPower(0);
+            rightFrontDrive.setPower(0);
         }
 
 
@@ -250,74 +319,47 @@ public class AprilTagAutonomousInitDetectionExample extends LinearOpMode
         while (opModeIsActive()) {sleep(20);}
     }
 
-    public void encoderDrive(double speed,
-                             double leftFrontInches, double rightFrontInches,
-                             double leftBackInches, double rightBackInches,
-                             double timeoutS) {
-        int newFrontLeftTarget;
-        int newFrontRightTarget;
-        int newBackLeftTarget;
-        int newBackRightTarget;
-        // Ensure that the opmode is still active
+    public void encoderDrive(double speed,double leftInches, double rightInches,double timeout){
+        int newLeftTarget;
+        int newRightTarget;
         if (opModeIsActive()) {
+            newLeftTarget = leftBackDrive.getCurrentPosition() + (int) (leftInches * COUNTS_PER_INCH);
+            newRightTarget = rightBackDrive.getCurrentPosition() + (int) (rightInches * COUNTS_PER_INCH);
 
-            // Determine new target position, and pass to motor controller
-            newFrontLeftTarget = leftFrontDrive.getCurrentPosition() + (int)(leftFrontInches * COUNTS_PER_INCH);
-            newFrontRightTarget = rightFrontDrive.getCurrentPosition() + (int)(rightFrontInches * COUNTS_PER_INCH);
-            newBackLeftTarget = leftBackDrive.getCurrentPosition() + (int)(leftBackInches * COUNTS_PER_INCH);
-            newBackRightTarget = rightBackDrive.getCurrentPosition() + (int)(rightBackInches * COUNTS_PER_INCH);
+            leftBackDrive.setTargetPosition(newLeftTarget);
+            rightBackDrive.setTargetPosition(newRightTarget);
+            leftFrontDrive.setTargetPosition(newLeftTarget);
+            rightFrontDrive.setTargetPosition(newRightTarget);
 
-            leftFrontDrive.setTargetPosition(newFrontLeftTarget);
-            rightFrontDrive.setTargetPosition(newFrontRightTarget);
-            leftBackDrive.setTargetPosition(newBackLeftTarget);
-            rightBackDrive.setTargetPosition(newBackRightTarget);
-            // Turn On RUN_TO_POSITION
-            leftFrontDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            rightFrontDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             leftBackDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             rightBackDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            leftFrontDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            rightFrontDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-            // reset the timeout time and start motion.
-            runtime.reset();
-            leftFrontDrive.setPower(Math.abs(speed));
-            rightFrontDrive.setPower(Math.abs(speed));
             leftBackDrive.setPower(Math.abs(speed));
             rightBackDrive.setPower(Math.abs(speed));
-
-            // keep looping while we are still active, and there is time left, and both motors are running.
-            // Note: We use (isBusy() && isBusy()) in the loop test, which means that when EITHER motor hits
-            // its target position, the motion will stop.  This is "safer" in the event that the robot will
-            // always end the motion as soon as possible.
-            // However, if you require that BOTH motors have finished their moves before the robot continues
-            // onto the next step, use (isBusy() || isBusy()) in the loop test.
-            while (opModeIsActive() &&
-                    (runtime.seconds() < timeoutS) &&
-                    (leftFrontDrive.isBusy() && rightFrontDrive.isBusy()&& leftBackDrive.isBusy() && rightBackDrive.isBusy())) {
-
-                // Display it for the driver.
-                telemetry.addData("Running to",  " %7d :%7d", newFrontLeftTarget,  newFrontRightTarget, newBackLeftTarget, newBackRightTarget);
-                telemetry.addData("Currently at",  " at %7d :%7d",
-                        leftFrontDrive.getCurrentPosition(), rightFrontDrive.getCurrentPosition(), leftBackDrive.getCurrentPosition(), rightBackDrive.getCurrentPosition());
+            leftFrontDrive.setPower(Math.abs(speed));
+            rightFrontDrive.setPower(Math.abs(speed));
+            while (opModeIsActive() &&(runtime.seconds() < timeout) &&(leftBackDrive.isBusy() && rightBackDrive.isBusy())) {
+                telemetry.addData("I'm waiting...", leftBackDrive.getCurrentPosition());
+                telemetry.addData("Target", rightBackDrive.getTargetPosition());
+                telemetry.addData("Target", leftBackDrive.getTargetPosition());
+                telemetry.addData("Current", rightBackDrive.getCurrentPosition());
                 telemetry.update();
             }
-
-            // Stop all motion;
-            leftFrontDrive.setPower(0);
-            rightFrontDrive.setPower(0);
-            leftBackDrive.setPower(0);
-            rightBackDrive.setPower(0);
-            // Turn off RUN_TO_POSITION
-            leftFrontDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            rightFrontDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            leftBackDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            rightBackDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            sleep(250);   // optional pause after each move.
         }
     }
 
     void tagToTelemetry(AprilTagDetection detection)
     {
         telemetry.addLine(String.format("\nDetected tag ID=%d", detection.id));
+        if(detection.id == 6){
+            blinkinLedDriver.setPattern(RevBlinkinLedDriver.BlinkinPattern.RED);
+        }else if(detection.id == 7){
+            blinkinLedDriver.setPattern(RevBlinkinLedDriver.BlinkinPattern.YELLOW);
+        }else if(detection.id == 8){
+            blinkinLedDriver.setPattern(RevBlinkinLedDriver.BlinkinPattern.GREEN);
+        }
         telemetry.addLine(String.format("Translation X: %.2f feet", detection.pose.x*FEET_PER_METER));
         telemetry.addLine(String.format("Translation Y: %.2f feet", detection.pose.y*FEET_PER_METER));
         telemetry.addLine(String.format("Translation Z: %.2f feet", detection.pose.z*FEET_PER_METER));
