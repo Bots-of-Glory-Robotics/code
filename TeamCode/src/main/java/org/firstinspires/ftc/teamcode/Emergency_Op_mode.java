@@ -58,7 +58,6 @@ import com.qualcomm.robotcore.util.Range;
             leftFrontDrive.setDirection(DcMotor.Direction.FORWARD);
             rightFrontDrive.setDirection(DcMotor.Direction.REVERSE);
 
-            //rightBackDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             // Wait for the game to start (driver presses PLAY)
             waitForStart();
             runtime.reset();
@@ -122,9 +121,9 @@ import com.qualcomm.robotcore.util.Range;
                 // Show the elapsed game time and wheel power.
                 telemetry.addData("Status", "Run Time: " + runtime.toString());
                 telemetry.addData("BackLeftPower", leftBackDrive.getPower());
-                telemetry.addData("Right Encoder", rightBackDrive.getCurrentPosition());
-                telemetry.addData("Left Encoder", leftBackDrive.getCurrentPosition());
-                telemetry.addData("lift Encoder", liftMoter.getCurrentPosition());
+                telemetry.addData("BackRightPower", rightBackDrive.getPower());
+                telemetry.addData("FrontLeftPower", leftFrontDrive.getPower());
+                telemetry.addData("FrontRightPower", rightFrontDrive.getPower());
                 telemetry.update();
             }
         }
